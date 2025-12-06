@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Music Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* Glassmorphism Effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Header with Search */
+        .header {
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 16px 25px;
+            border: none;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 30px rgba(0, 191, 255, 0.4);
+            border-color: rgba(0, 191, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .search-btn {
+            padding: 16px 35px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(135deg, #00bfff, #1e90ff);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 191, 255, 0.3);
+        }
+
+        .search-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0, 191, 255, 0.5);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+            overflow: hidden;
+        }
+
+        .results-area {
+            border-radius: 20px;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .results-area::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .results-area::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .results-area::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00bfff, #1e90ff);
+            border-radius: 10px;
+        }
+
+        .song-item {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 18px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .song-item:hover {
+            background: rgba(0, 191, 255, 0.15);
+            transform: translateX(8px) scale(1.02);
+            border-color: rgba(0, 191, 255, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 191, 255, 0.2);
+        }
+
+        .song-thumbnail {
+            width: 65px;
+            height: 65px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .song-info {
+            flex: 1;
+        }
+
+        .song-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .song-artist {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .song-duration {
+            color: rgba(0, 191, 255, 0.8);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Queue Sidebar */
+        .queue-sidebar {
+            border-radius: 20px;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .queue-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #00bfff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .queue-item {
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .queue-item:hover {
+            background: rgba(0, 191, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .queue-item.active {
+            background: linear-gradient(135deg, rgba(0, 191, 255, 0.3), rgba(30, 144, 255, 0.3));
+            border-left: 4px solid #00bfff;
+            font-weight: 600;
+        }
+
+        /* CD Player Animation */
+        .cd-player {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+        }
+
+        .cd-disc {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            position: relative;
+            animation: rotate 20s linear infinite;
+            animation-play-state: paused;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .cd-disc.playing {
+            animation-play-state: running;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .cd-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .cd-thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cd-hole {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1e);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Player Controls */
+        .player-controls {
+            padding: 25px 30px;
+            border-radius: 20px;
+        }
+
+        .now-playing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .now-playing-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00bfff;
+        }
+
+        .quality-selector {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            color: #ffffff;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .quality-selector:hover {
+            background: rgba(0, 191, 255, 0.2);
+            border-color: #00bfff;
+        }
+
+        .player-main {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .track-info {
+            flex: 1;
+        }
+
+        .track-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .track-artist {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-bottom: 20px;
+        }
+
+        .time-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00bfff, #1e90ff);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Control Buttons */
+        .controls-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .control-btn:hover {
+            background: rgba(0, 191, 255, 0.3);
+            border-color: #00bfff;
+            transform: scale(1.1);
+        }
+
+        .control-btn.play-btn {
+            width: 65px;
+            height: 65px;
+            font-size: 26px;
+            background: linear-gradient(135deg, #00bfff, #1e90ff);
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 191, 255, 0.4);
+        }
+
+        .control-btn.play-btn:hover {
+            box-shadow: 0 6px 30px rgba(0, 191, 255, 0.6);
+        }
+
+        /* Volume Control */
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .volume-icon {
+            font-size: 20px;
+            color: #00bfff;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #00bfff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 191, 255, 0.5);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .empty-state h2 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: #00bfff;
+        }
+
+        /* Visualizer Bars */
+        .visualizer {
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            height: 50px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .visualizer-bar {
+            width: 5px;
+            background: linear-gradient(to top, #00bfff, #1e90ff);
+            border-radius: 3px;
+            animation: wave 0.8s ease-in-out infinite;
+        }
+
+        .visualizer-bar:nth-child(1) { animation-delay: 0s; }
+        .visualizer-bar:nth-child(2) { animation-delay: 0.1s; }
+        .visualizer-bar:nth-child(3) { animation-delay: 0.2s; }
+        .visualizer-bar:nth-child(4) { animation-delay: 0.3s; }
+        .visualizer-bar:nth-child(5) { animation-delay: 0.4s; }
+        .visualizer-bar:nth-child(6) { animation-delay: 0.5s; }
+        .visualizer-bar:nth-child(7) { animation-delay: 0.6s; }
+
+        @keyframes wave {
+            0%, 100% { height: 15px; }
+            50% { height: 50px; }
+        }
+
+        .visualizer.paused .visualizer-bar {
+            animation: none;
+            height: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header glass">
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="🎵 गाना खोजें... (Search songs...)">
+                <button class="search-btn" id="searchBtn">🔍 खोजें</button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Results Area -->
+            <div class="results-area glass" id="resultsArea">
+                <div class="empty-state">
+                    <h2>🎵 संगीत खोजें</h2>
+                    <p>अपने पसंदीदा गाने खोजने के लिए ऊपर खोज बॉक्स का उपयोग करें</p>
+                </div>
+            </div>
+
+            <!-- Queue Sidebar -->
+            <div class="queue-sidebar glass">
+                <div class="queue-title">📋 प्लेलिस्ट</div>
+                <div id="queueList">
+                    <div class="empty-state">कोई गाना नहीं</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Controls -->
+        <div class="player-controls glass">
+            <div class="now-playing-header">
+                <div class="now-playing-title">▶️ अभी चल रहा है</div>
+                <select class="quality-selector" id="qualitySelector">
+                    <option value="best">🎧 Best Quality</option>
+                    <option value="high">High (320kbps)</option>
+                    <option value="medium">Medium (192kbps)</option>
+                    <option value="low">Low (128kbps)</option>
+                </select>
+            </div>
+
+            <div class="player-main">
+                <!-- CD Player -->
+                <div class="cd-player">
+                    <div class="cd-disc" id="cdDisc">
+                        <div class="cd-center">
+                            <img src="https://via.placeholder.com/140?text=🎵" class="cd-thumbnail" id="cdThumbnail" alt="Album Art">
+                        </div>
+                        <div class="cd-hole"></div>
+                    </div>
+                    <div class="visualizer paused" id="visualizer">
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                        <div class="visualizer-bar"></div>
+                    </div>
+                </div>
+
+                <!-- Track Info & Controls -->
+                <div class="track-info">
+                    <div class="track-title" id="trackTitle">कोई गाना नहीं चल रहा</div>
+                    <div class="track-artist" id="trackArtist">कोई गाना चुनें</div>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div class="time-labels">
+                            <span id="currentTime">0:00</span>
+                            <span id="totalTime">0:00</span>
+                        </div>
+                        <div class="progress-bar" id="progressBar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Control Buttons -->
+                    <div class="controls-buttons">
+                        <button class="control-btn" id="prevBtn">⏮️</button>
+                        <button class="control-btn play-btn" id="playPauseBtn">▶️</button>
+                        <button class="control-btn" id="nextBtn">⏭️</button>
+                    </div>
+
+                    <!-- Volume Control -->
+                    <div class="volume-control">
+                        <span class="volume-icon">🔊</span>
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+                        <span id="volumeLabel">80%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        const elements = {
+            searchInput: document.getElementById('searchInput'),
+            searchBtn: document.getElementById('searchBtn'),
+            resultsArea: document.getElementById('resultsArea'),
+            queueList: document.getElementById('queueList'),
+            audioPlayer: document.getElementById('audioPlayer'),
+            cdDisc: document.getElementById('cdDisc'),
+            cdThumbnail: document.getElementById('cdThumbnail'),
+            visualizer: document.getElementById('visualizer'),
+            trackTitle: document.getElementById('trackTitle'),
+            trackArtist: document.getElementById('trackArtist'),
+            currentTime: document.getElementById('currentTime'),
+            totalTime: document.getElementById('totalTime'),
+            progressBar: document.getElementById('progressBar'),
+            progressFill: document.getElementById('progressFill'),
+            playPauseBtn: document.getElementById('playPauseBtn'),
+            prevBtn: document.getElementById('prevBtn'),
+            nextBtn: document.getElementById('nextBtn'),
+            volumeSlider: document.getElementById('volumeSlider'),
+            volumeLabel: document.getElementById('volumeLabel'),
+            qualitySelector: document.getElementById('qualitySelector')
+        };
+
+        let queue = [];
+        let currentIndex = -1;
+        let currentQuality = 'best';
+
+        // Initialize
+        elements.audioPlayer.volume = 0.8;
+
+        // Search
+        elements.searchBtn.addEventListener('click', searchSongs);
+        elements.searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') searchSongs();
+        });
+
+        async function searchSongs() {
+            const query = elements.searchInput.value.trim();
+            if (!query) return;
+
+            elements.resultsArea.innerHTML = '<div class="loading">🔍 खोज रहे हैं...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    displayResults(data.results);
+                } else {
+                    elements.resultsArea.innerHTML = '<div class="empty-state"><h2>❌ कोई परिणाम नहीं</h2></div>';
+                }
+            } catch (error) {
+                elements.resultsArea.innerHTML = '<div class="empty-state"><h2>❌ त्रुटि</h2><p>' + error.message + '</p></div>';
+            }
+        }
+
+        function displayResults(songs) {
+            elements.resultsArea.innerHTML = '';
+            songs.forEach(song => {
+                const songItem = document.createElement('div');
+                songItem.className = 'song-item';
+                songItem.innerHTML = `
+                    ${song.thumbnail ? `<img src="${song.thumbnail}" class="song-thumbnail" alt="${song.title}">` : '<div class="song-thumbnail">🎵</div>'}
+                    <div class="song-info">
+                        <div class="song-title">${song.title}</div>
+                        <div class="song-artist">${song.artist}</div>
+                    </div>
+                    <div class="song-duration">${song.duration}</div>
+                `;
+                songItem.addEventListener('click', () => playSong(song));
+                elements.resultsArea.appendChild(songItem);
+            });
+        }
+
+        async function playSong(song) {
+            try {
+                elements.audioPlayer.src = `${API_BASE}/stream/${song.videoId}?quality=${currentQuality}`;
+                elements.audioPlayer.load();
+                
+                await elements.audioPlayer.play();
+
+                // Update UI
+                elements.trackTitle.textContent = song.title;
+                elements.trackArtist.textContent = song.artist;
+                elements.cdThumbnail.src = song.thumbnail || 'https://via.placeholder.com/140?text=🎵';
+
+                // Add to queue
+                if (!queue.find(s => s.videoId === song.videoId)) {
+                    queue.push(song);
+                    updateQueue();
+                }
+
+                currentIndex = queue.findIndex(s => s.videoId === song.videoId);
+                updateQueue();
+                
+            } catch (error) {
+                console.error('Playback error:', error);
+                alert('प्लेबैक त्रुटि: गाना नहीं चल सका');
+            }
+        }
+
+        function updateQueue() {
+            if (queue.length === 0) {
+                elements.queueList.innerHTML = '<div class="empty-state">कोई गाना नहीं</div>';
+                return;
+            }
+
+            elements.queueList.innerHTML = '';
+            queue.forEach((song, index) => {
+                const queueItem = document.createElement('div');
+                queueItem.className = 'queue-item' + (index === currentIndex ? ' active' : '');
+                queueItem.innerHTML = `${index + 1}. ${song.title}`;
+                queueItem.addEventListener('click', () => {
+                    currentIndex = index;
+                    playSong(song);
+                });
+                elements.queueList.appendChild(queueItem);
+            });
+        }
+
+        // Audio Events
+        elements.audioPlayer.addEventListener('play', () => {
+            elements.cdDisc.classList.add('playing');
+            elements.visualizer.classList.remove('paused');
+            elements.playPauseBtn.textContent = '⏸️';
+        });
+
+        elements.audioPlayer.addEventListener('pause', () => {
+            elements.cdDisc.classList.remove('playing');
+            elements.visualizer.classList.add('paused');
+            elements.playPauseBtn.textContent = '▶️';
+        });
+
+        elements.audioPlayer.addEventListener('timeupdate', () => {
+            const percent = (elements.audioPlayer.currentTime / elements.audioPlayer.duration) * 100;
+            elements.progressFill.style.width = percent + '%';
+            elements.currentTime.textContent = formatTime(elements.audioPlayer.currentTime);
+        });
+
+        elements.audioPlayer.addEventListener('loadedmetadata', () => {
+            elements.totalTime.textContent = formatTime(elements.audioPlayer.duration);
+        });
+
+        elements.audioPlayer.addEventListener('ended', playNext);
+
+        // Controls
+        elements.playPauseBtn.addEventListener('click', () => {
+            if (elements.audioPlayer.paused) {
+                elements.audioPlayer.play();
+            } else {
+                elements.audioPlayer.pause();
+            }
+        });
+
+        elements.prevBtn.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                playSong(queue[currentIndex]);
+            }
+        });
+
+        elements.nextBtn.addEventListener('click', playNext);
+
+        function playNext() {
+            if (currentIndex < queue.length - 1) {
+                currentIndex++;
+                playSong(queue[currentIndex]);
+            }
+        }
+
+        // Progress Bar Click
+        elements.progressBar.addEventListener('click', (e) => {
+            const rect = elements.progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            elements.audioPlayer.currentTime = percent * elements.audioPlayer.duration;
+        });
+
+        // Volume Control
+        elements.volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            elements.audioPlayer.volume = volume;
+            elements.volumeLabel.textContent = e.target.value + '%';
+        });
+
+        // Quality Selector
+        elements.qualitySelector.addEventListener('change', (e) => {
+            currentQuality = e.target.value;
+            if (currentIndex >= 0) {
+                const currentTime = elements.audioPlayer.currentTime;
+                playSong(queue[currentIndex]).then(() => {
+                    elements.audioPlayer.currentTime = currentTime;
+                });
+            }
+        });
+
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>
