@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse,FileResponse
 from ytmusicapi import YTMusic
 import yt_dlp
 from typing import List, Dict, Optional
 import logging
 import httpx
+import os
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -128,11 +129,15 @@ class MusicService:
 # Initialize service
 music_service = MusicService()
 
+FRONTEND_FILE = "frontend.html" 
 
 @app.get("/")
-async def root():
-    """Root endpoint"""
-    return {"message": "YouTube Music Streaming API", "status": "active"}
+async def serve_frontend():
+    """Serve frontend.html if exists"""
+    if os.path.exists(FRONTEND_FILE):
+        return FileResponse(FRONTEND_FILE, media_type="text/html")
+    return {"message": "frontend.html not found"}
+
 
 
 @app.get("/search")
@@ -225,4 +230,4 @@ async def stream_audio(video_id: str, quality: Optional[str] = "best"):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
