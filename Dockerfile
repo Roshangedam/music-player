@@ -15,7 +15,7 @@ COPY . .
 
 # Install Python dependencies directly
 RUN pip install --no-cache-dir fastapi uvicorn yt_dlp ytmusicapi httpx
-
+RUN pip install -U yt-dlp
 # Set environment variable for Cloud Run
 ENV PORT 8080
 
